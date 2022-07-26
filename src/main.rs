@@ -8,8 +8,25 @@ use bevy::{
     sprite::collide_aabb::{collide, Collision},
 };
 
+const FLOOR_POSITION: f32 = -350.0;
+const CHAR_STARTING_POSITION: (f32, f32, f32) = (-600.0, FLOOR_POSITION + 15.0, 0.0);
+
 #[derive(Component)]
-struct Player;
+struct Player {
+    location: Vec3
+}
+
+impl Player {
+    fn new() -> Self {
+        Self {
+            location: Vec3::new(
+                          CHAR_STARTING_POSITION.0,
+                          CHAR_STARTING_POSITION.1,
+                          CHAR_STARTING_POSITION.2
+                      )
+        }
+    }
+}
 
 #[derive(Component)]
 struct Tile;
@@ -20,10 +37,6 @@ fn main() {
         .add_startup_system(setup)
         .run();
 }
-
-const FLOOR_POSITION: f32 = -350.0;
-const CHAR_POSITION: f32 = FLOOR_POSITION + 15.0;
-
 
 // Add the game's entities to our world
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -53,10 +66,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert_bundle(SpriteBundle {
             texture: asset_server.load("textures/rpg/chars/hat-guy/hat-guy.png"),
             transform: Transform {
-                translation: Vec3::new(-600.0, CHAR_POSITION, 0.0),
+                translation: Vec3::new(CHAR_STARTING_POSITION.0, CHAR_STARTING_POSITION.1, CHAR_STARTING_POSITION.2),
                 ..default()
             },
             ..default()
         })
-        .insert(Player);
+        .insert(Player::new());
 }
