@@ -8,6 +8,12 @@ use bevy::{
     sprite::collide_aabb::{collide, Collision},
 };
 
+#[derive(Component)]
+struct Player;
+
+#[derive(Component)]
+struct Tile;
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -31,6 +37,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         let n = num as f32;
         commands
             .spawn()
+            .insert(Tile)
             .insert_bundle(SpriteBundle {
                 texture: asset_server.load("textures/rpg/tiles/generic-rpg-tile42.png"),
                 transform: Transform {
@@ -46,9 +53,10 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert_bundle(SpriteBundle {
             texture: asset_server.load("textures/rpg/chars/hat-guy/hat-guy.png"),
             transform: Transform {
-                translation: Vec3::new(0.0, CHAR_POSITION, 0.0),
+                translation: Vec3::new(-600.0, CHAR_POSITION, 0.0),
                 ..default()
             },
             ..default()
-        });
+        })
+        .insert(Player);
 }
