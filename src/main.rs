@@ -1,6 +1,3 @@
-// https://github.com/bevyengine/bevy/blob/latest/examples/games/alien_cake_addict.rs
-// //! A simplified implementation of the classic game "Breakout"
-
 use bevy::{
     core::FixedTimestep,
     math::{const_vec2, const_vec3},
@@ -13,6 +10,7 @@ const CHAR_STARTING_LOCATION: Location = Location {
     x: -600.0,y: FLOOR_POSITION + 15.0, z: 0.0
 };
 
+#[derive(Default)]
 struct Location {
     x: f32,
     y: f32,
@@ -23,27 +21,33 @@ struct Location {
 struct Tile;
 
 #[derive(Component)]
+struct Character;
+
+#[derive(Component, Default)]
 struct Player {
-    location: Location
+    location: Location,
+    entity: Option<Entity>
 }
 
-impl Player {
-    fn new() -> Self {
-        Self {
-            location: CHAR_STARTING_LOCATION
-        }
-    }
+#[derive(Component, Default)]
+struct Game {
+    player: Player
 }
 
 fn main() {
     App::new()
+        .init_resource::<Game>()
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
+        .add_system_set(
+            SystemSet::new()
+            .with_system(move_player)
+        )
         .run();
 }
 
 // Add the game's entities to our world
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMut<Game>) {
     // Cameras
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());
@@ -65,8 +69,12 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             });
     };
 
+    // set char starting location
+    game.player.location = CHAR_STARTING_LOCATION;
+
     // spawn character
-    commands.spawn()
+    game.player.entity = Some(
+        commands.spawn()
         .insert_bundle(SpriteBundle {
             texture: asset_server.load("textures/rpg/chars/hat-guy/hat-guy.png"),
             transform: Transform {
@@ -75,6 +83,32 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             },
             ..default()
         })
-        .insert(Player::new());
+        .insert(Character)
+        .id()
+    )
 }
 
+fn move_player(keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut query: Query<&mut Transform, With<Character>>) {
+    let mut moved = false;
+    let mut player_transform = query.single_mut();
+
+    if keyboard_input.pressed(KeyCode::Right) {
+        moved = true;
+        game.player.location.x += 10.0;
+    } else if keyboard_input.pressed(KeyCode::Left) {
+        moved = true;
+        game.player.location.x -= 10.0;
+    } else if keyboard_input.pressed(KeyCode::Up) {
+        moved = true;
+        game.player.location.y += 10.0;
+    } else if keyboard_input.pressed(KeyCode::Down) {
+        moved = true;
+        game.player.location.y -= 10.0;
+    }
+
+    if moved {
+        player_transform.translation.x = game.player.location.x;
+        player_transform.translation.y = game.player.location.y;
+        player_transform.translation.z = game.player.location.z;
+    }
+}
