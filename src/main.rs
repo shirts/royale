@@ -10,6 +10,8 @@ const CHAR_STARTING_LOCATION: Location = Location {
     x: -600.0,y: FLOOR_POSITION + 15.0, z: 0.0
 };
 
+const TILE_MOVE_SIZE: f32 = 5.0;
+
 #[derive(Default)]
 struct Location {
     x: f32,
@@ -26,7 +28,8 @@ struct Character;
 #[derive(Component, Default)]
 struct Player {
     location: Location,
-    entity: Option<Entity>
+    entity: Option<Entity>,
+    direction_facing: Direction
 }
 
 #[derive(Component, Default)]
@@ -72,11 +75,13 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMu
     // set char starting location
     game.player.location = CHAR_STARTING_LOCATION;
 
+    game.player.direction_facing = Direction::RightToLeft;
+
     // spawn character
     game.player.entity = Some(
         commands.spawn()
         .insert_bundle(SpriteBundle {
-            texture: asset_server.load("textures/rpg/chars/hat-guy/hat-guy.png"),
+            texture: asset_server.load("textures/rpg/chars/sensei/sensei.png"),
             transform: Transform {
                 translation: Vec3::new(CHAR_STARTING_LOCATION.x, CHAR_STARTING_LOCATION.y, CHAR_STARTING_LOCATION.z),
                 ..default()
@@ -94,16 +99,33 @@ fn move_player(keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut 
 
     if keyboard_input.pressed(KeyCode::Right) {
         moved = true;
-        game.player.location.x += 10.0;
+        game.player.location.x += TILE_MOVE_SIZE;
+        game.player.direction_facing = Direction::LeftToRight;
+
     } else if keyboard_input.pressed(KeyCode::Left) {
         moved = true;
-        game.player.location.x -= 10.0;
+        game.player.location.x -= TILE_MOVE_SIZE;
+        game.player.direction_facing = Direction::RightToLeft;
     } else if keyboard_input.pressed(KeyCode::Up) {
         moved = true;
-        game.player.location.y += 10.0;
+        game.player.direction_facing = Direction::Inherit;
+        game.player.location.y += TILE_MOVE_SIZE;
     } else if keyboard_input.pressed(KeyCode::Down) {
         moved = true;
-        game.player.location.y -= 10.0;
+        game.player.direction_facing = Direction::Inherit;
+        game.player.location.y -= TILE_MOVE_SIZE;
+    } else if keyboard_input.pressed(KeyCode::LShift) {
+        match game.player.direction_facing {
+            Direction::RightToLeft => {
+                moved = true;
+                game.player.location.x -= TILE_MOVE_SIZE * 4.0;
+            },
+            Direction::LeftToRight => {
+                moved = true;
+                game.player.location.x += TILE_MOVE_SIZE * 4.0;
+            },
+            _ => {}
+        }
     }
 
     if moved {
