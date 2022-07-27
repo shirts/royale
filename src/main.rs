@@ -1,3 +1,4 @@
+use std::thread;
 use bevy::{
     core::FixedTimestep,
     math::{const_vec2, const_vec3},
@@ -11,13 +12,17 @@ const CHAR_STARTING_LOCATION: Location = Location {
 };
 
 const TILE_MOVE_SIZE: f32 = 5.0;
+const MISSLE_TRAVEL: f32 = 20.0;
 
 const LEFT_WALL: f32 = -600.0;
 const RIGHT_WALL: f32 = 600.0;
 const BOTTOM_WALL: f32 = -400.0;
 const TOP_WALL: f32 = 400.0;
 
-#[derive(Default, Debug)]
+const MISSLE_SIZE: Vec3 = const_vec3!([120.0, 20.0, 0.0]);
+const MISSLE_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
+
+#[derive(Clone, Copy, Default, Debug)]
 struct Location {
     x: f32,
     y: f32,
@@ -30,11 +35,21 @@ struct Tile;
 #[derive(Component)]
 struct Character;
 
+#[derive(Component)]
+struct Projectile;
+
 #[derive(Component, Default)]
 struct Player {
     location: Location,
     entity: Option<Entity>,
-    direction_facing: Direction
+    direction_facing: Direction,
+    missiles: Vec<Missile>
+}
+
+#[derive(Component, Default)]
+struct Missile {
+    entity: Option<Entity>,
+    location: Location
 }
 
 #[derive(Component, Default)]
@@ -49,7 +64,7 @@ fn main() {
         .add_startup_system(setup)
         .add_system_set(
             SystemSet::new()
-            .with_system(move_player)
+            .with_system(player_action)
         )
         .run();
 }
@@ -80,6 +95,8 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMu
     // set char starting location
     game.player.location = CHAR_STARTING_LOCATION;
 
+    game.player.missiles  = Vec::new();
+
     game.player.direction_facing = Direction::RightToLeft;
 
     // spawn character
@@ -98,7 +115,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMu
     )
 }
 
-fn move_player(keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut person_query: Query<&mut Transform, With<Character>>) {
+fn player_action(mut commands: Commands, keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut person_query: Query<&mut Transform, With<Character>>) {
     let mut moved = false;
     let mut player_transform = person_query.single_mut();
 
@@ -136,6 +153,44 @@ fn move_player(keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut 
             moved = true;
             game.player.location.y = new_location;
         }
+    } else if keyboard_input.pressed(KeyCode::Space) {
+        // render missle
+        // re-render in new pos every n seconds
+        // check for collisions
+        //
+        let mut projectile_location = game.player.location;
+
+        let projectile_entity = Some(
+            commands
+            .spawn()
+            .insert(Projectile)
+            .insert_bundle(SpriteBundle {
+                transform: Transform {
+                    translation: Vec3::new(projectile_location.x + 5.0, projectile_location.y, projectile_location.z),
+                    scale: MISSLE_SIZE,
+                    ..default()
+                },
+                sprite: Sprite {
+                    color: MISSLE_COLOR,
+                    ..default()
+                },
+                ..default()
+            })
+            .id()
+        );
+
+        let mut missle = Missile {
+            location: projectile_location,
+            entity: projectile_entity
+        };
+
+        thread::spawn(move || {
+            loop {
+                // re-render missile
+            }
+
+        });
+
     }
 
     if moved {
@@ -143,4 +198,8 @@ fn move_player(keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut 
         player_transform.translation.y = game.player.location.y;
         player_transform.translation.z = game.player.location.z;
     }
+}
+
+fn shoot(mut game: ResMut<Game>, mut person_query: Query<&mut Transform, With<Character>>) {
+
 }
