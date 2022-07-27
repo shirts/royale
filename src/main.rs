@@ -12,7 +12,12 @@ const CHAR_STARTING_LOCATION: Location = Location {
 
 const TILE_MOVE_SIZE: f32 = 5.0;
 
-#[derive(Default)]
+const LEFT_WALL: f32 = -600.0;
+const RIGHT_WALL: f32 = 600.0;
+const BOTTOM_WALL: f32 = -400.0;
+const TOP_WALL: f32 = 400.0;
+
+#[derive(Default, Debug)]
 struct Location {
     x: f32,
     y: f32,
@@ -93,38 +98,43 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMu
     )
 }
 
-fn move_player(keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut query: Query<&mut Transform, With<Character>>) {
+fn move_player(keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut person_query: Query<&mut Transform, With<Character>>) {
     let mut moved = false;
-    let mut player_transform = query.single_mut();
+    let mut player_transform = person_query.single_mut();
 
     if keyboard_input.pressed(KeyCode::Right) {
-        moved = true;
-        game.player.location.x += TILE_MOVE_SIZE;
         game.player.direction_facing = Direction::LeftToRight;
 
+        // move if player will not collide with right wall
+        let new_location = game.player.location.x + TILE_MOVE_SIZE;
+        if new_location < RIGHT_WALL {
+            moved = true;
+            game.player.location.x = new_location;
+        }
     } else if keyboard_input.pressed(KeyCode::Left) {
-        moved = true;
-        game.player.location.x -= TILE_MOVE_SIZE;
         game.player.direction_facing = Direction::RightToLeft;
+
+        let new_location = game.player.location.x - TILE_MOVE_SIZE;
+        if new_location > LEFT_WALL {
+            moved = true;
+            game.player.location.x = new_location;
+        }
+
     } else if keyboard_input.pressed(KeyCode::Up) {
-        moved = true;
         game.player.direction_facing = Direction::Inherit;
-        game.player.location.y += TILE_MOVE_SIZE;
+
+        let new_location = game.player.location.y + TILE_MOVE_SIZE;
+        if new_location < TOP_WALL {
+            moved = true;
+            game.player.location.y = new_location;
+        }
     } else if keyboard_input.pressed(KeyCode::Down) {
-        moved = true;
         game.player.direction_facing = Direction::Inherit;
-        game.player.location.y -= TILE_MOVE_SIZE;
-    } else if keyboard_input.pressed(KeyCode::LShift) {
-        match game.player.direction_facing {
-            Direction::RightToLeft => {
-                moved = true;
-                game.player.location.x -= TILE_MOVE_SIZE * 4.0;
-            },
-            Direction::LeftToRight => {
-                moved = true;
-                game.player.location.x += TILE_MOVE_SIZE * 4.0;
-            },
-            _ => {}
+
+        let new_location = game.player.location.y - TILE_MOVE_SIZE;
+        if new_location > BOTTOM_WALL {
+            moved = true;
+            game.player.location.y = new_location;
         }
     }
 
