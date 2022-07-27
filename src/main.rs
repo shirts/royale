@@ -9,27 +9,31 @@ use bevy::{
 };
 
 const FLOOR_POSITION: f32 = -350.0;
-const CHAR_STARTING_POSITION: (f32, f32, f32) = (-600.0, FLOOR_POSITION + 15.0, 0.0);
+const CHAR_STARTING_LOCATION: Location = Location {
+    x: -600.0,y: FLOOR_POSITION + 15.0, z: 0.0
+};
+
+struct Location {
+    x: f32,
+    y: f32,
+    z: f32
+}
+
+#[derive(Component)]
+struct Tile;
 
 #[derive(Component)]
 struct Player {
-    location: Vec3
+    location: Location
 }
 
 impl Player {
     fn new() -> Self {
         Self {
-            location: Vec3::new(
-                          CHAR_STARTING_POSITION.0,
-                          CHAR_STARTING_POSITION.1,
-                          CHAR_STARTING_POSITION.2
-                      )
+            location: CHAR_STARTING_LOCATION
         }
     }
 }
-
-#[derive(Component)]
-struct Tile;
 
 fn main() {
     App::new()
@@ -66,10 +70,11 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert_bundle(SpriteBundle {
             texture: asset_server.load("textures/rpg/chars/hat-guy/hat-guy.png"),
             transform: Transform {
-                translation: Vec3::new(CHAR_STARTING_POSITION.0, CHAR_STARTING_POSITION.1, CHAR_STARTING_POSITION.2),
+                translation: Vec3::new(CHAR_STARTING_LOCATION.x, CHAR_STARTING_LOCATION.y, CHAR_STARTING_LOCATION.z),
                 ..default()
             },
             ..default()
         })
         .insert(Player::new());
 }
+
