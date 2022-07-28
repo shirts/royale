@@ -38,7 +38,7 @@ struct Tile;
 #[derive(Component)]
 struct Character;
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct Projectile {
     direction: FacingDirection
 }
@@ -58,7 +58,7 @@ struct Player {
     direction: FacingDirection
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 enum FacingDirection {
     Left,
     Right,
@@ -210,8 +210,21 @@ fn shoot_action(mut commands: Commands, keyboard_input: Res<Input<KeyCode>>, gam
     );
 }
 
-fn move_missiles(mut projectile_query: Query<&mut Transform, With<Projectile>>) {
-    for mut transform in projectile_query.iter_mut() {
-        transform.translation.x += MISSILE_TRAVEL;
+fn move_missiles(mut projectile_query: Query<(&mut Transform, &Projectile)>) {
+    for (mut transform, projectile) in projectile_query.iter_mut() {
+        match projectile.direction {
+            FacingDirection::Up => {
+                transform.translation.y += MISSILE_TRAVEL
+            },
+            FacingDirection::Down => {
+                transform.translation.y -= MISSILE_TRAVEL;
+            },
+            FacingDirection::Left => {
+                transform.translation.x -= MISSILE_TRAVEL;
+            },
+            FacingDirection::Right => {
+                transform.translation.x += MISSILE_TRAVEL;
+            }
+        }
     };
 }
