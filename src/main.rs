@@ -4,9 +4,10 @@ use std::thread;
 use std::time::Duration;
 use bevy::{
     core::FixedTimestep,
+    ecs::query::WorldQuery,
     math::{const_vec2, const_vec3},
     prelude::*,
-    sprite::collide_aabb::{collide, Collision},
+    sprite::collide_aabb::{collide, Collision}
 };
 
 const FLOOR_POSITION: f32 = -350.0;
@@ -21,6 +22,9 @@ const LEFT_WALL: f32 = -600.0;
 const RIGHT_WALL: f32 = 600.0;
 const BOTTOM_WALL: f32 = -400.0;
 const TOP_WALL: f32 = 400.0;
+
+const BOARD_WIDTH: f32 = 1200.0;
+const BOARD_HEIGHT: f32 = 800.0;
 
 const MISSILE_SIZE: Vec3 = const_vec3!([120.0, 20.0, 0.0]);
 const MISSILE_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
@@ -189,7 +193,6 @@ fn shoot_action(mut commands: Commands, keyboard_input: Res<Input<KeyCode>>, gam
 
     let missile_location = Location { x: game.player.location.x + 5.0, ..game.player.location };
 
-
     Some(
         commands
         .spawn()
@@ -210,11 +213,24 @@ fn shoot_action(mut commands: Commands, keyboard_input: Res<Input<KeyCode>>, gam
     );
 }
 
-fn move_missiles(mut projectile_query: Query<(&mut Transform, &Projectile)>) {
-    for (mut transform, projectile) in projectile_query.iter_mut() {
+fn move_missiles(mut commands: Commands, mut projectile_query: Query<(Entity, &mut Transform, &Projectile)>) {
+    for (entity, mut transform, mut projectile) in projectile_query.iter_mut() {
         match projectile.direction {
             FacingDirection::Up => {
-                transform.translation.y += MISSILE_TRAVEL
+                transform.translation.y += MISSILE_TRAVEL;
+
+                // https://github.com/bevyengine/bevy/blob/latest/examples/games/breakout.rs#L370
+                let collision = collide(
+                    transform.translation,
+                    Vec2::new(10.0, 10.0),
+                    Vec3::new(0.0, 600.0, 0.0),
+                    Vec2::new(BOARD_WIDTH, 10.0)
+                );
+
+                if let Some(collision) = collision {
+                    println!("collision!");
+                    commands.entity(entity).despawn();
+                }
             },
             FacingDirection::Down => {
                 transform.translation.y -= MISSILE_TRAVEL;
