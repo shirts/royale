@@ -9,6 +9,7 @@ use bevy::{
     prelude::*,
     sprite::collide_aabb::{collide, Collision}
 };
+use rand::Rng;
 
 const FLOOR_POSITION: f32 = -350.0;
 const CHAR_STARTING_LOCATION: Location = Location {
@@ -41,6 +42,9 @@ struct Tile;
 
 #[derive(Component)]
 struct Character;
+
+#[derive(Component)]
+struct Enemy;
 
 #[derive(Component, Debug)]
 struct Projectile {
@@ -95,12 +99,19 @@ fn main() {
         .run();
 }
 
+fn random_location() -> Vec3 {
+    let mut range = rand::thread_rng();
+    let x = range.gen_range(LEFT_WALL..RIGHT_WALL);
+    let y = range.gen_range(BOTTOM_WALL..TOP_WALL);
+
+    Vec3::new(x, y, 0.0)
+}
+
 // Add the game's entities to our world
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMut<Game>) {
     // Cameras
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
     commands.spawn_bundle(UiCameraBundle::default());
-
 
     // spawn floor
     for num in -800..800 {
@@ -123,20 +134,33 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMu
 
     game.player.direction = FacingDirection::Right;
 
-    // spawn character
+    // Spawn enemy
+    commands.spawn()
+        .insert_bundle(SpriteBundle {
+            texture: asset_server.load("textures/simplespace/enemy_B.png"),
+            transform: Transform {
+                translation: random_location(),
+                ..default()
+            },
+            ..default()
+        })
+    .insert(Enemy);
+
+    // Spawn player
     game.player.entity = Some(
         commands.spawn()
         .insert_bundle(SpriteBundle {
             texture: asset_server.load("textures/rpg/chars/sensei/sensei.png"),
             transform: Transform {
-                translation: Vec3::new(CHAR_STARTING_LOCATION.x, CHAR_STARTING_LOCATION.y, CHAR_STARTING_LOCATION.z),
+                translation: random_location(),
                 ..default()
             },
             ..default()
         })
         .insert(Character)
         .id()
-    )
+    );
+
 }
 
 fn player_action(mut _commands: Commands, keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut person_query: Query<&mut Transform, With<Character>>) {
@@ -213,24 +237,24 @@ fn shoot_action(mut commands: Commands, keyboard_input: Res<Input<KeyCode>>, gam
     );
 }
 
-fn move_missiles(mut commands: Commands, mut projectile_query: Query<(Entity, &mut Transform, &Projectile)>) {
-    for (entity, mut transform, mut projectile) in projectile_query.iter_mut() {
+fn move_missiles(mut projectile_query: Query<(&mut Transform, &Projectile)>) {
+    for (mut transform, projectile) in projectile_query.iter_mut() {
         match projectile.direction {
             FacingDirection::Up => {
                 transform.translation.y += MISSILE_TRAVEL;
 
                 // https://github.com/bevyengine/bevy/blob/latest/examples/games/breakout.rs#L370
-                let collision = collide(
-                    transform.translation,
-                    Vec2::new(10.0, 10.0),
-                    Vec3::new(0.0, 600.0, 0.0),
-                    Vec2::new(BOARD_WIDTH, 10.0)
-                );
-
-                if let Some(collision) = collision {
-                    println!("collision!");
-                    commands.entity(entity).despawn();
-                }
+//                 let collision = collide(
+//                     transform.translation,
+//                     Vec2::new(10.0, 10.0),
+//                     Vec3::new(LEFT_WALL, TOP_WALL + 50.0, 0.0),
+//                     Vec2::new(BOARD_WIDTH, 10.0)
+//                 );
+//
+//                 if let Some(collision) = collision {
+//                     println!("collision!");
+//                     commands.entity(entity).despawn();
+//                 }
             },
             FacingDirection::Down => {
                 transform.translation.y -= MISSILE_TRAVEL;
