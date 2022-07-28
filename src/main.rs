@@ -37,6 +37,16 @@ struct Location {
     z: f32
 }
 
+impl Location {
+    fn to_vec3(&self) -> Vec3 {
+        Vec3::new(
+            self.x,
+            self.y,
+            self.z
+        )
+    }
+}
+
 #[derive(Component)]
 struct Tile;
 
@@ -111,7 +121,6 @@ fn random_location() -> Vec3 {
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMut<Game>) {
     // Cameras
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    commands.spawn_bundle(UiCameraBundle::default());
 
     // spawn floor
     for num in -800..800 {
@@ -152,7 +161,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMu
         .insert_bundle(SpriteBundle {
             texture: asset_server.load("textures/rpg/chars/sensei/sensei.png"),
             transform: Transform {
-                translation: random_location(),
+                translation: game.player.location.to_vec3(),
                 ..default()
             },
             ..default()
