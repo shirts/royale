@@ -30,6 +30,12 @@ const BOARD_HEIGHT: f32 = 800.0;
 const MISSILE_SIZE: Vec3 = const_vec3!([120.0, 20.0, 0.0]);
 const MISSILE_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
+#[derive(Copy, Clone)]
+pub struct WinSize {
+    w: f32,
+    h: f32
+}
+
 #[derive(Clone, Copy, Default, Debug)]
 struct Location {
     x: f32,
@@ -99,7 +105,10 @@ fn main() {
     App::new()
         .init_resource::<Game>()
         .add_plugins(DefaultPlugins)
-        .add_startup_system(setup)
+        .add_startup_system(setup_system)
+        .add_startup_system_to_stage(StartupStage::PostStartup, spawn_player_system)
+        .add_startup_system_to_stage(StartupStage::PostStartup, spawn_enemy_system)
+
         .add_system_set(
             SystemSet::new()
             .with_system(player_action)
@@ -118,7 +127,7 @@ fn random_location() -> Vec3 {
 }
 
 // Add the game's entities to our world
-fn setup(mut commands: Commands,
+fn setup_system(mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut game: ResMut<Game>,
     windows: Res<Windows>
@@ -128,10 +137,16 @@ fn setup(mut commands: Commands,
 
     // Get window size
     let window = windows.get_primary().unwrap();
-    let (_width, height) = (window.width(), window.height());
+    let win_size = WinSize {
+        w: window.width(),
+        h: window.height()
+    };
+
+    // Add window size resource
+    commands.insert_resource(win_size.clone());
 
     // Spawn floor
-    let bottom = -height / 2.0;
+    let bottom = -win_size.h / 2.0;
 
     for num in -800..800 {
         let n = num as f32;
@@ -148,22 +163,12 @@ fn setup(mut commands: Commands,
             });
     };
 
+    game.player.direction = FacingDirection::Right;
+}
+
+fn spawn_player_system(mut commands: Commands, mut game: ResMut<Game>, asset_server: Res<AssetServer>) {
     // set char starting location
     game.player.location = CHAR_STARTING_LOCATION;
-
-    game.player.direction = FacingDirection::Right;
-
-    // Spawn enemy
-    commands.spawn()
-        .insert_bundle(SpriteBundle {
-            texture: asset_server.load("textures/simplespace/enemy_B.png"),
-            transform: Transform {
-                translation: random_location(),
-                ..default()
-            },
-            ..default()
-        })
-    .insert(Enemy);
 
     // Spawn player
     game.player.entity = Some(
@@ -179,7 +184,20 @@ fn setup(mut commands: Commands,
         .insert(Character)
         .id()
     );
+}
 
+fn spawn_enemy_system(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // Spawn enemy
+    commands.spawn()
+        .insert_bundle(SpriteBundle {
+            texture: asset_server.load("textures/simplespace/enemy_B.png"),
+            transform: Transform {
+                translation: random_location(),
+                ..default()
+            },
+            ..default()
+        })
+    .insert(Enemy);
 }
 
 fn player_action(mut _commands: Commands, keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut person_query: Query<&mut Transform, With<Character>>) {
