@@ -118,11 +118,21 @@ fn random_location() -> Vec3 {
 }
 
 // Add the game's entities to our world
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMut<Game>) {
+fn setup(mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut game: ResMut<Game>,
+    windows: Res<Windows>
+) {
     // Cameras
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
 
-    // spawn floor
+    // Get window size
+    let window = windows.get_primary().unwrap();
+    let (_width, height) = (window.width(), window.height());
+
+    // Spawn floor
+    let bottom = -height / 2.0;
+
     for num in -800..800 {
         let n = num as f32;
         commands
@@ -131,7 +141,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMu
             .insert_bundle(SpriteBundle {
                 texture: asset_server.load("textures/rpg/tiles/generic-rpg-tile42.png"),
                 transform: Transform {
-                    translation: Vec3::new(n, FLOOR_POSITION, 0.0),
+                    translation: Vec3::new(n, bottom , 0.0),
                     ..default()
                 },
                 ..default()
