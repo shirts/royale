@@ -39,15 +39,26 @@ struct Tile;
 struct Character;
 
 #[derive(Component)]
-struct Projectile;
+struct Projectile {
+    direction: FacingDirection
+}
+
+impl Projectile {
+    fn new(direction: FacingDirection) -> Self {
+        Self {
+            direction
+        }
+    }
+}
 
 #[derive(Component, Default)]
 struct Player {
     location: Location,
     entity: Option<Entity>,
-    direction_facing: Direction
+    direction: FacingDirection
 }
 
+#[derive(Copy, Clone)]
 enum FacingDirection {
     Left,
     Right,
@@ -60,13 +71,6 @@ impl Default for FacingDirection {
         Self::Right
     }
 }
-
-// #[derive(Component, Default)]
-// struct Missile {
-//     entity: Option<Entity>,
-//     location: Location,
-//     direction: FacingDirection
-// }
 
 #[derive(Component, Default)]
 struct Game {
@@ -113,7 +117,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMu
     // set char starting location
     game.player.location = CHAR_STARTING_LOCATION;
 
-    game.player.direction_facing = Direction::RightToLeft;
+    game.player.direction = FacingDirection::Right;
 
     // spawn character
     game.player.entity = Some(
@@ -136,7 +140,7 @@ fn player_action(mut _commands: Commands, keyboard_input: Res<Input<KeyCode>>, m
     let mut player_transform = person_query.single_mut();
 
     if keyboard_input.pressed(KeyCode::Right) {
-        game.player.direction_facing = Direction::LeftToRight;
+        game.player.direction = FacingDirection::Right;
 
         // move if player will not collide with right wall
         let new_location = game.player.location.x + TILE_MOVE_SIZE;
@@ -145,7 +149,7 @@ fn player_action(mut _commands: Commands, keyboard_input: Res<Input<KeyCode>>, m
             game.player.location.x = new_location;
         }
     } else if keyboard_input.pressed(KeyCode::Left) {
-        game.player.direction_facing = Direction::RightToLeft;
+        game.player.direction = FacingDirection::Left;
 
         let new_location = game.player.location.x - TILE_MOVE_SIZE;
         if new_location > LEFT_WALL {
@@ -154,7 +158,7 @@ fn player_action(mut _commands: Commands, keyboard_input: Res<Input<KeyCode>>, m
         }
 
     } else if keyboard_input.pressed(KeyCode::Up) {
-        game.player.direction_facing = Direction::Inherit;
+        game.player.direction = FacingDirection::Up;
 
         let new_location = game.player.location.y + TILE_MOVE_SIZE;
         if new_location < TOP_WALL {
@@ -162,7 +166,7 @@ fn player_action(mut _commands: Commands, keyboard_input: Res<Input<KeyCode>>, m
             game.player.location.y = new_location;
         }
     } else if keyboard_input.pressed(KeyCode::Down) {
-        game.player.direction_facing = Direction::Inherit;
+        game.player.direction = FacingDirection::Down;
 
         let new_location = game.player.location.y - TILE_MOVE_SIZE;
         if new_location > BOTTOM_WALL {
@@ -185,10 +189,11 @@ fn shoot_action(mut commands: Commands, keyboard_input: Res<Input<KeyCode>>, gam
 
     let missile_location = Location { x: game.player.location.x + 5.0, ..game.player.location };
 
-   Some(
+
+    Some(
         commands
         .spawn()
-        .insert(Projectile)
+        .insert(Projectile::new(game.player.direction))
         .insert_bundle(SpriteBundle {
             transform: Transform {
                 translation: Vec3::new(missile_location.x, missile_location.y, missile_location.z),
