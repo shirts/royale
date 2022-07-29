@@ -41,7 +41,7 @@ pub struct WinSize {
 }
 
 #[derive(Clone, Copy, Default, Debug)]
-struct Location {
+pub struct Location {
     x: f32,
     y: f32,
     z: f32
@@ -66,17 +66,6 @@ struct Character;
 use components::Velocity;
 use components::VelocityTrait;
 
-#[derive(Component)]
-struct Enemy;
-impl VelocityTrait for Enemy {
-    fn velocity() -> Velocity {
-        Velocity {
-            x: 30.0,
-            y: 10.0
-        }
-    }
-}
-
 #[derive(Component, Debug)]
 struct Projectile {
     direction: FacingDirection
@@ -90,15 +79,8 @@ impl Projectile {
     }
 }
 
-#[derive(Component, Default)]
-struct Player {
-    location: Location,
-    entity: Option<Entity>,
-    direction: FacingDirection
-}
-
 #[derive(Copy, Clone, Debug)]
-enum FacingDirection {
+pub enum FacingDirection {
     Left,
     Right,
     Up,
@@ -113,7 +95,7 @@ impl Default for FacingDirection {
 
 #[derive(Component, Default)]
 struct Game {
-    player: Player
+    player: player::Player
 }
 
 fn main() {
@@ -178,54 +160,52 @@ fn setup_system(mut commands: Commands,
             });
     };
 
-    game.player.direction = FacingDirection::Right;
+    game.player.set_direction(FacingDirection::Right);
 }
 
-
-fn player_action(mut _commands: Commands, keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut person_query: Query<&mut Transform, With<Character>>) {
+fn player_action(mut _commands: Commands, keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut person_query: Query<&mut Transform, With<player::Player>>) {
     let mut moved = false;
     let mut player_transform = person_query.single_mut();
 
-    if keyboard_input.pressed(KeyCode::Right) {
-        game.player.direction = FacingDirection::Right;
+    let mut new_x = game.player.location().x;
+    let mut new_y = game.player.location().y;
 
-        // move if player will not collide with right wall
-        let new_location = game.player.location.x + TILE_MOVE_SIZE;
-        if new_location < RIGHT_WALL {
+    if keyboard_input.pressed(KeyCode::Right) {
+        game.player.set_direction(FacingDirection::Right);
+
+        new_x = game.player.location().x + TILE_MOVE_SIZE;
+        if new_x < RIGHT_WALL {
             moved = true;
-            game.player.location.x = new_location;
         }
     } else if keyboard_input.pressed(KeyCode::Left) {
-        game.player.direction = FacingDirection::Left;
+        game.player.set_direction(FacingDirection::Left);
 
-        let new_location = game.player.location.x - TILE_MOVE_SIZE;
-        if new_location > LEFT_WALL {
+        new_x = game.player.location().x - TILE_MOVE_SIZE;
+        if new_x > LEFT_WALL {
             moved = true;
-            game.player.location.x = new_location;
         }
 
     } else if keyboard_input.pressed(KeyCode::Up) {
-        game.player.direction = FacingDirection::Up;
+        game.player.set_direction(FacingDirection::Up);
 
-        let new_location = game.player.location.y + TILE_MOVE_SIZE;
-        if new_location < TOP_WALL {
+        new_y = game.player.location().y + TILE_MOVE_SIZE;
+        if new_y < TOP_WALL {
             moved = true;
-            game.player.location.y = new_location;
         }
     } else if keyboard_input.pressed(KeyCode::Down) {
-        game.player.direction = FacingDirection::Down;
+        game.player.set_direction(FacingDirection::Down);
 
-        let new_location = game.player.location.y - TILE_MOVE_SIZE;
-        if new_location > BOTTOM_WALL {
+        new_y = game.player.location().y - TILE_MOVE_SIZE;
+        if new_y > BOTTOM_WALL {
             moved = true;
-            game.player.location.y = new_location;
         }
     }
 
     if moved {
-        player_transform.translation.x = game.player.location.x;
-        player_transform.translation.y = game.player.location.y;
-        player_transform.translation.z = game.player.location.z;
+        player_transform.translation.x = game.player.location().x;
+        player_transform.translation.y = game.player.location().y;
+        player_transform.translation.z = game.player.location().z;
+        game.player.set_location(Some(new_x), Some(new_y));
     }
 }
 
@@ -234,12 +214,12 @@ fn shoot_action(mut commands: Commands, keyboard_input: Res<Input<KeyCode>>, gam
         return
     }
 
-    let missile_location = Location { x: game.player.location.x + 5.0, ..game.player.location };
+    let missile_location = Location { x: game.player.location().x + 5.0, ..game.player.location() };
 
     Some(
         commands
         .spawn()
-        .insert(Projectile::new(game.player.direction))
+        .insert(Projectile::new(game.player.direction()))
         .insert_bundle(SpriteBundle {
             transform: Transform {
                 translation: Vec3::new(missile_location.x, missile_location.y, missile_location.z),
