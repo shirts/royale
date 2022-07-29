@@ -18,7 +18,11 @@ use crate::{
     VelocityTrait,
 };
 
-use crate::components::Movable;
+use crate::components::{
+    FromPlayer,
+    Movable,
+    SpriteSize
+};
 
 use bevy::prelude::*;
 
@@ -176,6 +180,8 @@ fn player_shoot_system(
                 commands
                 .spawn()
                 .insert(Projectile::new(game.player.direction()))
+                .insert(FromPlayer)
+                .insert(SpriteSize::from(SPRITE_SIZE))
                 .insert(Projectile::velocity())
                 .insert(Movable::new(true))
                 .insert_bundle(SpriteBundle {

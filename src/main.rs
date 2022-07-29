@@ -15,7 +15,13 @@ mod components;
 mod enemy;
 mod player;
 
-use components:: Movable;
+use components::{
+    FromPlayer,
+    Movable,
+    SpriteSize
+};
+
+use enemy::Enemy;
 
 const FLOOR_POSITION: f32 = -350.0;
 const PLAYER_STARTING_LOCATION: Location = Location {
@@ -39,7 +45,7 @@ const TOP_WALL: f32 = 400.0;
 const BOARD_WIDTH: f32 = 1200.0;
 const BOARD_HEIGHT: f32 = 800.0;
 
-const MISSILE_SIZE: Vec3 = const_vec3!([10.0, 5.0, 10.0]);
+const MISSILE_SIZE: Vec3 = const_vec3!([10.0, 15.0, 10.0]);
 const MISSILE_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
 #[derive(Copy, Clone)]
@@ -143,6 +149,7 @@ fn main() {
         .add_startup_system(setup_system)
         .add_system(movable_system)
         .add_system(projectile_velocity_system)
+        .add_system(player_projectile_enemy_system)
         .run();
 }
 
@@ -215,6 +222,39 @@ fn movable_system(
             {
                 commands.entity(entity).despawn();
             }
+
+        }
+    }
+}
+
+fn player_projectile_enemy_system(
+    mut commands: Commands,
+    projectile_query: Query<(Entity, &Transform, &SpriteSize), (With<Projectile>, With<FromPlayer>)>,
+    enemy_query: Query<(Entity, &Transform, &SpriteSize), With<Enemy>>,
+) {
+
+    // iterate through projectiles
+    for (proj_entity, proj_transform, proj_size) in projectile_query.iter() {
+        let proj_scale = Vec2::new(proj_transform.scale[0], proj_transform.scale[1]);
+
+        // iterate through enemies
+        for (enemy_entity, enemy_transform, enemy_size) in enemy_query.iter() {
+            let enemy_scale = Vec2::new(enemy_transform.scale[0], enemy_transform.scale[1]);
+
+            // determine collision
+             let collision = collide(
+                 proj_transform.translation,
+                 proj_size.0 * proj_scale,
+                 enemy_transform.translation,
+                 enemy_size.0 * enemy_scale
+             );
+
+             if let Some(_) = collision {
+                 println!("collision. despawning projectile and enemy");
+                 commands.entity(enemy_entity).despawn();
+                 commands.entity(proj_entity).despawn();
+             };
+
 
         }
     }

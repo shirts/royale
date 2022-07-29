@@ -9,6 +9,7 @@ use crate::{
 };
 use crate::components::{
     Movable,
+    SpriteSize,
     Velocity,
     VelocityTrait
 };
@@ -17,6 +18,7 @@ use bevy::prelude::*;
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 
+const SPRITE_SIZE: (f32, f32) = (crate::SPRITE_SIZE.0 / 1.5, crate::SPRITE_SIZE.0 / 1.5);
 
 pub struct EnemyPlugin;
 
@@ -29,7 +31,7 @@ impl Plugin for EnemyPlugin {
 }
 
 #[derive(Component)]
-struct Enemy;
+pub struct Enemy;
 impl VelocityTrait for Enemy {
     fn velocity() -> Velocity {
         Velocity {
@@ -79,7 +81,9 @@ fn spawn_enemy_system(
         })
     .insert(Enemy)
     .insert(Enemy::velocity())
-    .insert(Movable::new(true));
+    .insert(Movable::new(true))
+    .insert(SpriteSize::from(SPRITE_SIZE))
+    .id();
 }
 
 fn enemy_movement_system(mut query: Query<(&Velocity, &mut Transform), With<Enemy>>) {
