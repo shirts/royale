@@ -11,6 +11,9 @@ use bevy::{
 };
 use rand::Rng;
 
+mod player;
+mod enemy;
+
 const FLOOR_POSITION: f32 = -350.0;
 const CHAR_STARTING_LOCATION: Location = Location {
     x: -600.0,y: FLOOR_POSITION + 15.0, z: 0.0
@@ -105,9 +108,9 @@ fn main() {
     App::new()
         .init_resource::<Game>()
         .add_plugins(DefaultPlugins)
+        .add_plugin(player::PlayerPlugin)
+        .add_plugin(enemy::EnemyPlugin)
         .add_startup_system(setup_system)
-        .add_startup_system_to_stage(StartupStage::PostStartup, spawn_player_system)
-        .add_startup_system_to_stage(StartupStage::PostStartup, spawn_enemy_system)
 
         .add_system_set(
             SystemSet::new()
@@ -166,39 +169,6 @@ fn setup_system(mut commands: Commands,
     game.player.direction = FacingDirection::Right;
 }
 
-fn spawn_player_system(mut commands: Commands, mut game: ResMut<Game>, asset_server: Res<AssetServer>) {
-    // set char starting location
-    game.player.location = CHAR_STARTING_LOCATION;
-
-    // Spawn player
-    game.player.entity = Some(
-        commands.spawn()
-        .insert_bundle(SpriteBundle {
-            texture: asset_server.load("textures/rpg/chars/sensei/sensei.png"),
-            transform: Transform {
-                translation: game.player.location.to_vec3(),
-                ..default()
-            },
-            ..default()
-        })
-        .insert(Character)
-        .id()
-    );
-}
-
-fn spawn_enemy_system(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // Spawn enemy
-    commands.spawn()
-        .insert_bundle(SpriteBundle {
-            texture: asset_server.load("textures/simplespace/enemy_B.png"),
-            transform: Transform {
-                translation: random_location(),
-                ..default()
-            },
-            ..default()
-        })
-    .insert(Enemy);
-}
 
 fn player_action(mut _commands: Commands, keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut person_query: Query<&mut Transform, With<Character>>) {
     let mut moved = false;
