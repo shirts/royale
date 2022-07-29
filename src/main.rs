@@ -15,6 +15,8 @@ mod components;
 mod enemy;
 mod player;
 
+use components:: Movable;
+
 const FLOOR_POSITION: f32 = -350.0;
 const PLAYER_STARTING_LOCATION: Location = Location {
     x: -600.0,y: FLOOR_POSITION + 15.0, z: 0.0
@@ -26,6 +28,7 @@ const MISSILE_TRAVEL: f32 = 20.0;
 
 const TIME_STEP: f32 = 1.0 / 60.0;
 const BASE_SPEED: f32 = 500.0;
+const BASE_PROJECTILE_SPEED: f32 = 250.0;
 
 const LEFT_WALL: f32 = -600.0;
 const RIGHT_WALL: f32 = 600.0;
@@ -86,13 +89,13 @@ impl Projectile {
 impl VelocityTrait for Projectile {
     fn velocity() -> Velocity {
         Velocity {
-            x: 30.0,
+            x: 13.0,
             y: 10.0
         }
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum FacingDirection {
     Left,
     Right,
@@ -132,11 +135,8 @@ fn main() {
         .add_plugin(player::PlayerPlugin)
         .add_plugin(enemy::EnemyPlugin)
         .add_startup_system(setup_system)
-
-        .add_system_set(
-            SystemSet::new()
-            .with_system(move_missiles)
-        )
+        .add_system(movable_system)
+        .add_system(projectile_velocity_system)
         .run();
 }
 
@@ -188,34 +188,37 @@ fn setup_system(mut commands: Commands,
     game.player.set_direction(FacingDirection::Right);
 }
 
-fn move_missiles(mut projectile_query: Query<(&mut Transform, &Projectile)>) {
-    for (mut transform, projectile) in projectile_query.iter_mut() {
-        match projectile.direction {
-            FacingDirection::Up => {
-                transform.translation.y += MISSILE_TRAVEL;
+fn movable_system(
+    mut commands: Commands,
+    win_size: Res<WinSize>,
+    mut query: Query<(Entity, &Velocity, &mut Transform, &Movable)>
 
-                // https://github.com/bevyengine/bevy/blob/latest/examples/games/breakout.rs#L370
-//                 let collision = collide(
-//                     transform.translation,
-//                     Vec2::new(10.0, 10.0),
-//                     Vec3::new(LEFT_WALL, TOP_WALL + 50.0, 0.0),
-//                     Vec2::new(BOARD_WIDTH, 10.0)
-//                 );
-//
-//                 if let Some(collision) = collision {
-//                     println!("collision!");
-//                     commands.entity(entity).despawn();
-//                 }
-            },
-            FacingDirection::Down => {
-                transform.translation.y -= MISSILE_TRAVEL;
-            },
-            FacingDirection::Left => {
-                transform.translation.x -= MISSILE_TRAVEL;
-            },
-            FacingDirection::Right => {
-                transform.translation.x += MISSILE_TRAVEL;
-            }
-        }
-    };
+) {
+    for (entity, velocity, mut transform, movable) in query.iter_mut() {
+        let translation = &mut transform.translation;
+        translation.x += velocity.x * TIME_STEP * BASE_SPEED;
+        translation.y += velocity.y * TIME_STEP * BASE_SPEED;
+    }
+}
+
+fn projectile_velocity_system(mut game: ResMut<Game>, kb: Res<Input<KeyCode>>, mut query: Query<(&mut Velocity, &Projectile)>) {
+    for (mut velocity, projectile) in query.iter_mut() {
+        velocity.x =
+            if projectile.direction == FacingDirection::Left {
+                -1.0 * TIME_STEP * BASE_PROJECTILE_SPEED
+            } else if projectile.direction == FacingDirection::Right {
+                1.0 * TIME_STEP * BASE_PROJECTILE_SPEED
+            } else {
+                0.0
+            };
+
+        velocity.y =
+            if projectile.direction == FacingDirection::Up {
+                1.0 * TIME_STEP * BASE_PROJECTILE_SPEED
+            } else if projectile.direction == FacingDirection::Down {
+                -1.0 * TIME_STEP * BASE_PROJECTILE_SPEED
+            } else {
+                0.0
+            };
+    }
 }

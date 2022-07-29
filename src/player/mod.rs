@@ -3,7 +3,6 @@ use crate::{
     PLAYER_STARTING_LOCATION,
     MISSILE_COLOR,
     MISSILE_SIZE,
-    MISSILE_SPRITE,
     PLAYER_SPRITE_SIZE,
     TIME_STEP,
     Game,
@@ -30,7 +29,6 @@ impl Plugin for PlayerPlugin {
         app
         .add_startup_system_to_stage(StartupStage::PostStartup, spawn_player_system)
         .add_system(player_keyboard_event_system)
-        .add_system(player_movement_system)
         .add_system(player_shoot_system);
     }
 }
@@ -105,14 +103,6 @@ fn player_keyboard_event_system(mut game: ResMut<Game>, kb: Res<Input<KeyCode>>,
             } else {
                 0.0
             };
-    }
-}
-
-fn player_movement_system(mut query: Query<(&Velocity, &mut Transform), With<Player>>) {
-    for (velocity, mut transform) in query.iter_mut() {
-        let translation = &mut transform.translation;
-        translation.x += velocity.x * TIME_STEP * BASE_SPEED;
-        translation.y += velocity.y * TIME_STEP * BASE_SPEED;
     }
 }
 
