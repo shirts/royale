@@ -76,7 +76,6 @@ fn spawn_enemy_system(
     .insert(Enemy)
     .insert(Enemy::velocity())
     .insert(Movable::new(true));
-
 }
 
 fn enemy_movement_system(mut query: Query<(&Velocity, &mut Transform), With<Enemy>>) {

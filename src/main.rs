@@ -132,6 +132,11 @@ struct Game {
 fn main() {
     App::new()
         .init_resource::<Game>()
+        .insert_resource(WindowDescriptor {
+            width: 1400.0,
+            height: 1000.0,
+            ..Default::default()
+        })
         .add_plugins(DefaultPlugins)
         .add_plugin(player::PlayerPlugin)
         .add_plugin(enemy::EnemyPlugin)
