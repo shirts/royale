@@ -1,4 +1,9 @@
 use crate::{Character, Game, CHAR_STARTING_LOCATION};
+use crate::{
+    Velocity,
+    VelocityTrait
+};
+
 use bevy::prelude::*;
 
 pub struct PlayerPlugin;

@@ -11,8 +11,9 @@ use bevy::{
 };
 use rand::Rng;
 
-mod player;
+mod components;
 mod enemy;
+mod player;
 
 const FLOOR_POSITION: f32 = -350.0;
 const CHAR_STARTING_LOCATION: Location = Location {
@@ -62,8 +63,19 @@ struct Tile;
 #[derive(Component)]
 struct Character;
 
+use components::Velocity;
+use components::VelocityTrait;
+
 #[derive(Component)]
 struct Enemy;
+impl VelocityTrait for Enemy {
+    fn velocity() -> Velocity {
+        Velocity {
+            x: 30.0,
+            y: 10.0
+        }
+    }
+}
 
 #[derive(Component, Debug)]
 struct Projectile {

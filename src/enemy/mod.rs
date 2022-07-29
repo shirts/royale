@@ -1,4 +1,9 @@
 use crate::{Enemy, random_location};
+use crate::components::{
+    Velocity,
+    VelocityTrait
+};
+
 use bevy::prelude::*;
 
 pub struct EnemyPlugin;
@@ -19,5 +24,6 @@ fn spawn_enemy_system(mut commands: Commands, asset_server: Res<AssetServer>) {
             },
             ..default()
         })
-    .insert(Enemy);
+    .insert(Enemy)
+    .insert(Enemy::velocity());
 }
