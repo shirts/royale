@@ -23,6 +23,9 @@ const CHAR_STARTING_LOCATION: Location = Location {
 const TILE_MOVE_SIZE: f32 = 5.0;
 const MISSILE_TRAVEL: f32 = 20.0;
 
+const TIME_STEP: f32 = 1.0 / 60.0;
+const BASE_SPEED: f32 = 500.0;
+
 const LEFT_WALL: f32 = -600.0;
 const RIGHT_WALL: f32 = 600.0;
 const BOTTOM_WALL: f32 = -400.0;
@@ -108,8 +111,6 @@ fn main() {
 
         .add_system_set(
             SystemSet::new()
-            .with_system(player_action)
-            .with_system(shoot_action)
             .with_system(move_missiles)
         )
         .run();
@@ -161,79 +162,6 @@ fn setup_system(mut commands: Commands,
     };
 
     game.player.set_direction(FacingDirection::Right);
-}
-
-fn player_action(mut _commands: Commands, keyboard_input: Res<Input<KeyCode>>, mut game: ResMut<Game>, mut person_query: Query<&mut Transform, With<player::Player>>) {
-    let mut moved = false;
-    let mut player_transform = person_query.single_mut();
-
-    let mut new_x = game.player.location().x;
-    let mut new_y = game.player.location().y;
-
-    if keyboard_input.pressed(KeyCode::Right) {
-        game.player.set_direction(FacingDirection::Right);
-
-        new_x = game.player.location().x + TILE_MOVE_SIZE;
-        if new_x < RIGHT_WALL {
-            moved = true;
-        }
-    } else if keyboard_input.pressed(KeyCode::Left) {
-        game.player.set_direction(FacingDirection::Left);
-
-        new_x = game.player.location().x - TILE_MOVE_SIZE;
-        if new_x > LEFT_WALL {
-            moved = true;
-        }
-
-    } else if keyboard_input.pressed(KeyCode::Up) {
-        game.player.set_direction(FacingDirection::Up);
-
-        new_y = game.player.location().y + TILE_MOVE_SIZE;
-        if new_y < TOP_WALL {
-            moved = true;
-        }
-    } else if keyboard_input.pressed(KeyCode::Down) {
-        game.player.set_direction(FacingDirection::Down);
-
-        new_y = game.player.location().y - TILE_MOVE_SIZE;
-        if new_y > BOTTOM_WALL {
-            moved = true;
-        }
-    }
-
-    if moved {
-        player_transform.translation.x = game.player.location().x;
-        player_transform.translation.y = game.player.location().y;
-        player_transform.translation.z = game.player.location().z;
-        game.player.set_location(Some(new_x), Some(new_y));
-    }
-}
-
-fn shoot_action(mut commands: Commands, keyboard_input: Res<Input<KeyCode>>, game: ResMut<Game>) {
-    if !keyboard_input.pressed(KeyCode::Space) {
-        return
-    }
-
-    let missile_location = Location { x: game.player.location().x + 5.0, ..game.player.location() };
-
-    Some(
-        commands
-        .spawn()
-        .insert(Projectile::new(game.player.direction()))
-        .insert_bundle(SpriteBundle {
-            transform: Transform {
-                translation: Vec3::new(missile_location.x, missile_location.y, missile_location.z),
-                scale: MISSILE_SIZE,
-                ..default()
-            },
-            sprite: Sprite {
-                color: MISSILE_COLOR,
-                ..default()
-            },
-            ..default()
-        })
-        .id()
-    );
 }
 
 fn move_missiles(mut projectile_query: Query<(&mut Transform, &Projectile)>) {
