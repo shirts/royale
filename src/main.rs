@@ -96,9 +96,23 @@ impl Default for FacingDirection {
     }
 }
 
+#[derive(Copy, Clone, Debug)]
+pub enum Difficulty {
+    Novice,
+    Hard,
+    Expert
+}
+
+impl Default for Difficulty {
+    fn default() -> Self {
+        Self::Novice
+    }
+}
+
 #[derive(Component, Default)]
 struct Game {
-    player: player::Player
+    player: player::Player,
+    difficulty: Difficulty
 }
 
 fn main() {

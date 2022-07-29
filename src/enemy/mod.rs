@@ -1,6 +1,8 @@
 use crate::{
     BASE_SPEED,
     TIME_STEP,
+    Difficulty,
+    Game,
     random_location
 };
 use crate::components::{
@@ -34,14 +36,30 @@ impl VelocityTrait for Enemy {
     }
 }
 
-fn should_spawn_enemy() -> bool {
+fn should_spawn_enemy(difficulty: Difficulty) -> bool {
     let mut rng = thread_rng();
-    let choices = [true, false, false, false, false];
+
+    let choices = match difficulty {
+        Difficulty::Novice => {
+            vec![true, false, false, false, false]
+        },
+        Difficulty::Hard => {
+            vec![true, false]
+        },
+        Difficulty::Expert => {
+            vec![true]
+        }
+    };
+
     *choices.choose(&mut rng).unwrap()
 }
 
-fn spawn_enemy_system(mut commands: Commands, asset_server: Res<AssetServer>) {
-    if !should_spawn_enemy() {
+fn spawn_enemy_system(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    game: Res<Game>
+) {
+    if !should_spawn_enemy(game.difficulty) {
         println!("not spawning enemy");
         return
     }
