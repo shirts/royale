@@ -1,8 +1,10 @@
 use crate::{
     BASE_SPEED,
-    CHAR_STARTING_LOCATION,
+    PLAYER_STARTING_LOCATION,
     MISSILE_COLOR,
     MISSILE_SIZE,
+    MISSILE_SPRITE,
+    PLAYER_SPRITE_SIZE,
     TIME_STEP,
     Game,
     Projectile,
@@ -13,6 +15,10 @@ use crate::{
     Location,
     Velocity,
     VelocityTrait
+};
+
+use crate::components::{
+    Movable
 };
 
 use bevy::prelude::*;
@@ -71,6 +77,7 @@ fn spawn_player_system(
         })
         .insert(game.player)
         .insert(Player::velocity())
+        .insert(Movable::new(false))
         .id()
     );
 }
@@ -113,7 +120,7 @@ fn player_shoot_system(
     mut commands: Commands,
     keyboard_input: Res<Input<KeyCode>>,
     game: ResMut<Game>,
-    mut query: Query<&mut Transform, With<Player>>
+    mut query: Query<&mut Transform, With<Player>>,
     ) {
     if !keyboard_input.pressed(KeyCode::Space) {
         return
@@ -122,12 +129,14 @@ fn player_shoot_system(
     if let Ok(transform) = query.get_single_mut() {
         let (x, y) = (transform.translation.x, transform.translation.y);
 
-        let missile_location = Location { x: x + 5.0, y, z: 0.0 };
+        let missile_location = Location { x: x + PLAYER_SPRITE_SIZE, y, z: 0.0 };
 
         Some(
             commands
             .spawn()
             .insert(Projectile::new(game.player.direction()))
+            .insert(Projectile::velocity())
+            .insert(Movable::new(true))
             .insert_bundle(SpriteBundle {
                 transform: Transform {
                     translation: Vec3::new(missile_location.x, missile_location.y, missile_location.z),

@@ -14,3 +14,16 @@ pub trait VelocityTrait {
         }
     }
 }
+
+#[derive(Component)]
+pub struct Movable {
+    pub auto_despawn: bool
+}
+
+impl Movable {
+    pub fn new(auto_despawn: bool) -> Self {
+        Self {
+            auto_despawn
+        }
+    }
+}

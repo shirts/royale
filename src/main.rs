@@ -16,9 +16,10 @@ mod enemy;
 mod player;
 
 const FLOOR_POSITION: f32 = -350.0;
-const CHAR_STARTING_LOCATION: Location = Location {
+const PLAYER_STARTING_LOCATION: Location = Location {
     x: -600.0,y: FLOOR_POSITION + 15.0, z: 0.0
 };
+const PLAYER_SPRITE_SIZE: f32 = 5.0;
 
 const TILE_MOVE_SIZE: f32 = 5.0;
 const MISSILE_TRAVEL: f32 = 20.0;
@@ -34,7 +35,7 @@ const TOP_WALL: f32 = 400.0;
 const BOARD_WIDTH: f32 = 1200.0;
 const BOARD_HEIGHT: f32 = 800.0;
 
-const MISSILE_SIZE: Vec3 = const_vec3!([120.0, 20.0, 0.0]);
+const MISSILE_SIZE: Vec3 = const_vec3!([20.0, 15.0, 10.0]);
 const MISSILE_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
 #[derive(Copy, Clone)]
@@ -78,6 +79,15 @@ impl Projectile {
     fn new(direction: FacingDirection) -> Self {
         Self {
             direction
+        }
+    }
+}
+
+impl VelocityTrait for Projectile {
+    fn velocity() -> Velocity {
+        Velocity {
+            x: 30.0,
+            y: 10.0
         }
     }
 }

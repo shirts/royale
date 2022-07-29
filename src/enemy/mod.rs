@@ -6,6 +6,7 @@ use crate::{
     random_location
 };
 use crate::components::{
+    Movable,
     Velocity,
     VelocityTrait
 };
@@ -74,7 +75,9 @@ fn spawn_enemy_system(
             ..default()
         })
     .insert(Enemy)
-    .insert(Enemy::velocity());
+    .insert(Enemy::velocity())
+    .insert(Movable::new(true));
+
 }
 
 fn enemy_movement_system(mut query: Query<(&Velocity, &mut Transform), With<Enemy>>) {
