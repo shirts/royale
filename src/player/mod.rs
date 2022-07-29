@@ -36,7 +36,7 @@ impl Plugin for PlayerPlugin {
 pub struct Player {
     entity: Option<Entity>,
     direction: FacingDirection,
-    fire_delay: i32
+    fire_delay: i32,
 }
 
 impl VelocityTrait for Player {
@@ -151,31 +151,45 @@ fn player_shoot_system(
 
     if let Ok(transform) = query.get_single_mut() {
         let (x, y) = (transform.translation.x, transform.translation.y);
-        let x_offset = PLAYER_SPRITE_SIZE.0 / 2.0 * PLAYER_SPRITE_SCALE - 5.0;
-        let y_offset = 15.0;
 
-        let missile_location = Location { x: x + x_offset, y: y + y_offset, z: 0.0 };
+        let mut fire_missile = |x_offset: f32, y_offset: f32| {
+            let missile_location = Location { x: x + x_offset, y: y + y_offset, z: 0.0 };
+            Some(
+                commands
+                .spawn()
+                .insert(Projectile::new(game.player.direction()))
+                .insert(Projectile::velocity())
+                .insert(Movable::new(true))
+                .insert_bundle(SpriteBundle {
+                    transform: Transform {
+                        translation: Vec3::new(missile_location.x, missile_location.y, missile_location.z),
+                        scale: MISSILE_SIZE,
+                        ..default()
+                    },
+                    sprite: Sprite {
+                        color: MISSILE_COLOR,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .id()
+            )
+        };
 
-        Some(
-            commands
-            .spawn()
-            .insert(Projectile::new(game.player.direction()))
-            .insert(Projectile::velocity())
-            .insert(Movable::new(true))
-            .insert_bundle(SpriteBundle {
-                transform: Transform {
-                    translation: Vec3::new(missile_location.x, missile_location.y, missile_location.z),
-                    scale: MISSILE_SIZE,
-                    ..default()
-                },
-                sprite: Sprite {
-                    color: MISSILE_COLOR,
-                    ..default()
-                },
-                ..default()
-            })
-            .id()
-        );
+        match game.player.direction {
+            FacingDirection::Up | FacingDirection::Down => {
+                for i in 1..5 {
+                    fire_missile(10.0, (i * 10) as f32);
+                    fire_missile(-10.0, (i * 10) as f32);
+                }
+            },
+            FacingDirection::Left | FacingDirection::Right => {
+                for i in 1..5 {
+                    fire_missile((i * 10) as f32, 10.0);
+                    fire_missile((i * 10) as f32, -10.0);
+                }
+            }
+        }
     }
 }
 

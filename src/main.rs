@@ -39,7 +39,7 @@ const TOP_WALL: f32 = 400.0;
 const BOARD_WIDTH: f32 = 1200.0;
 const BOARD_HEIGHT: f32 = 800.0;
 
-const MISSILE_SIZE: Vec3 = const_vec3!([20.0, 15.0, 10.0]);
+const MISSILE_SIZE: Vec3 = const_vec3!([10.0, 5.0, 10.0]);
 const MISSILE_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
 #[derive(Copy, Clone)]
@@ -90,8 +90,8 @@ impl Projectile {
 impl VelocityTrait for Projectile {
     fn velocity() -> Velocity {
         Velocity {
-            x: 13.0,
-            y: 10.0
+            x: 0.0,
+            y: 0.0
         }
     }
 }
