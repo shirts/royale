@@ -21,7 +21,8 @@ const FLOOR_POSITION: f32 = -350.0;
 const PLAYER_STARTING_LOCATION: Location = Location {
     x: -600.0,y: FLOOR_POSITION + 15.0, z: 0.0
 };
-const PLAYER_SPRITE_SIZE: f32 = 5.0;
+const PLAYER_SPRITE_SIZE: (f32, f32) = (5.0, 5.0);
+const PLAYER_SPRITE_SCALE: f32 = 2.0;
 
 const TILE_MOVE_SIZE: f32 = 5.0;
 const MISSILE_TRAVEL: f32 = 20.0;
@@ -184,8 +185,6 @@ fn setup_system(mut commands: Commands,
                 ..default()
             });
     };
-
-    game.player.set_direction(FacingDirection::Right);
 }
 
 fn movable_system(
@@ -198,6 +197,18 @@ fn movable_system(
         let translation = &mut transform.translation;
         translation.x += velocity.x * TIME_STEP * BASE_SPEED;
         translation.y += velocity.y * TIME_STEP * BASE_SPEED;
+
+        if movable.auto_despawn {
+            const MARGIN: f32 = 200.0;
+            if translation.y > win_size.h / 2.0 + MARGIN ||
+                translation.y < -win_size.h / 2.0 - MARGIN ||
+                translation.x > win_size.w / 2.0 + MARGIN ||
+                translation.x < -win_size.w / 2.0 - MARGIN
+            {
+                commands.entity(entity).despawn();
+            }
+
+        }
     }
 }
 

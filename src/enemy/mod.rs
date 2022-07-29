@@ -61,7 +61,6 @@ fn spawn_enemy_system(
     game: Res<Game>
 ) {
     if !should_spawn_enemy(game.difficulty) {
-        println!("not spawning enemy");
         return
     }
 

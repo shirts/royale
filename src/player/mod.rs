@@ -1,5 +1,6 @@
 use crate::{
     BASE_SPEED,
+    PLAYER_SPRITE_SCALE,
     PLAYER_STARTING_LOCATION,
     MISSILE_COLOR,
     MISSILE_SIZE,
@@ -16,9 +17,7 @@ use crate::{
     VelocityTrait
 };
 
-use crate::components::{
-    Movable
-};
+use crate::components::Movable;
 
 use bevy::prelude::*;
 
@@ -36,7 +35,8 @@ impl Plugin for PlayerPlugin {
 #[derive(Component, Copy, Clone, Default)]
 pub struct Player {
     entity: Option<Entity>,
-    direction: FacingDirection
+    direction: FacingDirection,
+    fire_delay: i32
 }
 
 impl VelocityTrait for Player {
@@ -56,6 +56,22 @@ impl Player {
     pub fn set_direction(&mut self, direction: FacingDirection) {
         self.direction = direction;
     }
+
+    pub fn fire_delay(&self) -> i32 {
+        self.fire_delay
+    }
+
+    pub fn reduce_fire_delay(&mut self) {
+        let new_delay = self.fire_delay() - 1;
+        if (new_delay < 0) { return };
+
+        self.set_fire_delay(new_delay);
+    }
+
+    fn set_fire_delay(&mut self, fire_delay: i32) {
+
+        self.fire_delay = fire_delay;
+    }
 }
 
 fn spawn_player_system(
@@ -63,6 +79,11 @@ fn spawn_player_system(
     mut game: ResMut<Game>,
     asset_server: Res<AssetServer>
 ) {
+
+    game.player.set_direction(FacingDirection::Right);
+
+    game.player.set_fire_delay(0);
+
     game.player.entity = Some(
         commands.spawn()
         .insert_bundle(SpriteBundle {
@@ -109,17 +130,31 @@ fn player_keyboard_event_system(mut game: ResMut<Game>, kb: Res<Input<KeyCode>>,
 fn player_shoot_system(
     mut commands: Commands,
     keyboard_input: Res<Input<KeyCode>>,
-    game: ResMut<Game>,
+    mut game: ResMut<Game>,
     mut query: Query<&mut Transform, With<Player>>,
     ) {
+
+    // Reduce delay each tick
+    game.player.reduce_fire_delay();
+
+    // Return if player can't fire
+    if game.player.fire_delay() > 0 {
+        return
+    }
+
     if !keyboard_input.pressed(KeyCode::Space) {
         return
     }
 
+    // Set fire delay
+    game.player.set_fire_delay(10);
+
     if let Ok(transform) = query.get_single_mut() {
         let (x, y) = (transform.translation.x, transform.translation.y);
+        let x_offset = PLAYER_SPRITE_SIZE.0 / 2.0 * PLAYER_SPRITE_SCALE - 5.0;
+        let y_offset = 15.0;
 
-        let missile_location = Location { x: x + PLAYER_SPRITE_SIZE, y, z: 0.0 };
+        let missile_location = Location { x: x + x_offset, y: y + y_offset, z: 0.0 };
 
         Some(
             commands
