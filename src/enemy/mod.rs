@@ -1,8 +1,10 @@
 use crate::{
     BASE_SPEED,
+    SPRITE_SCALE,
     TIME_STEP,
     Difficulty,
     Game,
+    WinSize,
     random_location
 };
 use crate::components::{
@@ -58,7 +60,8 @@ fn should_spawn_enemy(difficulty: Difficulty) -> bool {
 fn spawn_enemy_system(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    game: Res<Game>
+    game: Res<Game>,
+    win_size: Res<WinSize>
 ) {
     if !should_spawn_enemy(game.difficulty) {
         return
@@ -68,7 +71,8 @@ fn spawn_enemy_system(
         .insert_bundle(SpriteBundle {
             texture: asset_server.load("textures/simplespace/enemy_B.png"),
             transform: Transform {
-                translation: random_location(),
+                scale: Vec3::new(SPRITE_SCALE / 4.0, SPRITE_SCALE / 4.0, 1.0),
+                translation: random_location(*win_size),
                 ..default()
             },
             ..default()

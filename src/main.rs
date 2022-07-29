@@ -21,8 +21,8 @@ const FLOOR_POSITION: f32 = -350.0;
 const PLAYER_STARTING_LOCATION: Location = Location {
     x: -600.0,y: FLOOR_POSITION + 15.0, z: 0.0
 };
-const PLAYER_SPRITE_SIZE: (f32, f32) = (5.0, 5.0);
-const PLAYER_SPRITE_SCALE: f32 = 2.0;
+const SPRITE_SIZE: (f32, f32) = (5.0, 5.0);
+const SPRITE_SCALE: f32 = 2.2;
 
 const TILE_MOVE_SIZE: f32 = 5.0;
 const MISSILE_TRAVEL: f32 = 20.0;
@@ -146,10 +146,13 @@ fn main() {
         .run();
 }
 
-fn random_location() -> Vec3 {
-    let mut range = rand::thread_rng();
-    let x = range.gen_range(LEFT_WALL..RIGHT_WALL);
-    let y = range.gen_range(BOTTOM_WALL..TOP_WALL);
+fn random_location(win_size: WinSize) -> Vec3 {
+    let w_span = win_size.w / 2.0 - 100.0;
+    let h_span = win_size.h / 2.0 - 100.0;
+
+    let mut rng = rand::thread_rng();
+    let x = rng.gen_range(-w_span..w_span);
+    let y = rng.gen_range(-h_span..h_span);
 
     Vec3::new(x, y, 0.0)
 }

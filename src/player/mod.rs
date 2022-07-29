@@ -1,13 +1,14 @@
 use crate::{
     BASE_SPEED,
-    PLAYER_SPRITE_SCALE,
+    SPRITE_SCALE,
     PLAYER_STARTING_LOCATION,
     MISSILE_COLOR,
     MISSILE_SIZE,
-    PLAYER_SPRITE_SIZE,
+    SPRITE_SIZE,
     TIME_STEP,
     Game,
     Projectile,
+    WinSize,
     random_location
 };
 use crate::{
@@ -95,9 +96,9 @@ impl Player {
 fn spawn_player_system(
     mut commands: Commands,
     mut game: ResMut<Game>,
-    asset_server: Res<AssetServer>
+    asset_server: Res<AssetServer>,
+    win_size: Res<WinSize>
 ) {
-
     game.player = Player::new();
 
     game.player.entity = Some(
@@ -105,7 +106,8 @@ fn spawn_player_system(
         .insert_bundle(SpriteBundle {
             texture: asset_server.load("textures/rpg/chars/sensei/sensei.png"),
             transform: Transform {
-                translation: random_location(),
+                scale: Vec3::new(SPRITE_SCALE, SPRITE_SCALE, 1.0),
+                translation: random_location(*win_size),
                 ..default()
             },
             ..default()
