@@ -14,7 +14,7 @@ use crate::{
     FacingDirection,
     Location,
     Velocity,
-    VelocityTrait
+    VelocityTrait,
 };
 
 use crate::components::Movable;
@@ -34,9 +34,10 @@ impl Plugin for PlayerPlugin {
 
 #[derive(Component, Copy, Clone, Default)]
 pub struct Player {
-    entity: Option<Entity>,
     direction: FacingDirection,
+    entity: Option<Entity>,
     fire_delay: i32,
+    missile_multiplier: u32
 }
 
 impl VelocityTrait for Player {
@@ -49,6 +50,16 @@ impl VelocityTrait for Player {
 }
 
 impl Player {
+
+    pub fn new() -> Self {
+        Self {
+            direction: FacingDirection::Right,
+            entity: None,
+            fire_delay: 0,
+            missile_multiplier: 1
+        }
+    }
+
     pub fn direction(&self) -> FacingDirection {
         self.direction
     }
@@ -68,8 +79,15 @@ impl Player {
         self.set_fire_delay(new_delay);
     }
 
-    fn set_fire_delay(&mut self, fire_delay: i32) {
+    pub fn increase_missile_multiplier(&mut self, by: u32) {
+        self.missile_multiplier += by;
+    }
 
+    pub fn reset_missile_multiplier(&mut self) {
+        self.missile_multiplier = 1;
+    }
+
+    fn set_fire_delay(&mut self, fire_delay: i32) {
         self.fire_delay = fire_delay;
     }
 }
@@ -80,9 +98,7 @@ fn spawn_player_system(
     asset_server: Res<AssetServer>
 ) {
 
-    game.player.set_direction(FacingDirection::Right);
-
-    game.player.set_fire_delay(0);
+    game.player = Player::new();
 
     game.player.entity = Some(
         commands.spawn()
@@ -178,13 +194,13 @@ fn player_shoot_system(
 
         match game.player.direction {
             FacingDirection::Up | FacingDirection::Down => {
-                for i in 1..5 {
+                for i in 0..game.player.missile_multiplier {
                     fire_missile(10.0, (i * 10) as f32);
                     fire_missile(-10.0, (i * 10) as f32);
                 }
             },
             FacingDirection::Left | FacingDirection::Right => {
-                for i in 1..5 {
+                for i in 0..game.player.missile_multiplier {
                     fire_missile((i * 10) as f32, 10.0);
                     fire_missile((i * 10) as f32, -10.0);
                 }
