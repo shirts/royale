@@ -10,6 +10,7 @@ use bevy::{
     sprite::collide_aabb::{collide, Collision}
 };
 use rand::Rng;
+use rand::seq::SliceRandom;
 
 mod components;
 mod enemy;
@@ -102,7 +103,7 @@ impl VelocityTrait for Projectile {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Component, Copy, Clone, Debug, PartialEq)]
 pub enum FacingDirection {
     Left,
     Right,
@@ -113,6 +114,27 @@ pub enum FacingDirection {
 impl Default for FacingDirection {
     fn default() -> Self {
         Self::Right
+    }
+}
+
+fn random<T>(choices: &[T]) -> Option<& T> {
+    choices.choose(&mut rand::thread_rng())
+}
+
+impl FacingDirection {
+    fn random() -> Self {
+        let rand = random(
+            &[FacingDirection::Up,
+            FacingDirection::Down,
+            FacingDirection::Left,
+            FacingDirection::Left ]
+        );
+
+        if let Some(direction) = rand {
+            *direction
+        } else {
+            self::default()
+        }
     }
 }
 

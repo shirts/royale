@@ -3,9 +3,10 @@ use crate::{
     SPRITE_SCALE,
     TIME_STEP,
     Difficulty,
+    FacingDirection,
     Game,
     WinSize,
-    random_location
+    random_location,
 };
 use crate::components::{
     Movable,
@@ -36,7 +37,7 @@ impl VelocityTrait for Enemy {
     fn velocity() -> Velocity {
         Velocity {
             x: 0.5,
-            y: 0.0
+            y: 0.5
         }
     }
 }
@@ -81,15 +82,31 @@ fn spawn_enemy_system(
         })
     .insert(Enemy)
     .insert(Enemy::velocity())
+    .insert(FacingDirection::random())
     .insert(Movable::new(true))
     .insert(SpriteSize::from(SPRITE_SIZE))
     .id();
 }
 
-fn enemy_movement_system(mut query: Query<(&Velocity, &mut Transform), With<Enemy>>) {
-    for (velocity, mut transform) in query.iter_mut() {
+fn enemy_movement_system(
+    mut query: Query<(&Velocity, &mut Transform, &FacingDirection), With<Enemy>>) {
+    for (velocity, mut transform, direction) in query.iter_mut() {
         let translation = &mut transform.translation;
-        translation.x += velocity.x * TIME_STEP * BASE_SPEED;
-        translation.y += velocity.y * TIME_STEP * BASE_SPEED;
+
+        match direction {
+            FacingDirection::Left => {
+                translation.x -= velocity.x * TIME_STEP * BASE_SPEED;
+            },
+            FacingDirection::Right => {
+                translation.x += velocity.x * TIME_STEP * BASE_SPEED;
+            },
+            FacingDirection::Up => {
+                translation.y -= velocity.y * TIME_STEP * BASE_SPEED;
+            },
+            FacingDirection::Down => {
+                translation.y += velocity.y * TIME_STEP * BASE_SPEED;
+
+            }
+        }
     }
 }

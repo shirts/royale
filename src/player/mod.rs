@@ -58,7 +58,7 @@ impl Player {
 
     pub fn new() -> Self {
         Self {
-            direction: FacingDirection::Right,
+            direction: FacingDirection::default(),
             entity: None,
             fire_delay: 0,
             missile_multiplier: 1
