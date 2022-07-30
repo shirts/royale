@@ -55,7 +55,6 @@ impl VelocityTrait for Player {
 }
 
 impl Player {
-
     pub fn new() -> Self {
         Self {
             direction: FacingDirection::default(),
@@ -119,6 +118,7 @@ fn spawn_player_system(
         .insert(game.player)
         .insert(Player::velocity())
         .insert(Movable::new(false))
+        .insert(SpriteSize::from(SPRITE_SIZE))
         .id()
     );
 }

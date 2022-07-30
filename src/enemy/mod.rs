@@ -70,7 +70,8 @@ fn spawn_enemy_system(
         return
     }
 
-    commands.spawn()
+    Some(
+        commands.spawn()
         .insert_bundle(SpriteBundle {
             texture: asset_server.load("textures/simplespace/enemy_B.png"),
             transform: Transform {
@@ -80,12 +81,13 @@ fn spawn_enemy_system(
             },
             ..default()
         })
-    .insert(Enemy)
-    .insert(Enemy::velocity())
-    .insert(FacingDirection::random())
-    .insert(Movable::new(true))
-    .insert(SpriteSize::from(SPRITE_SIZE))
-    .id();
+        .insert(Enemy)
+        .insert(Enemy::velocity())
+        .insert(FacingDirection::random())
+        .insert(Movable::new(true))
+        .insert(SpriteSize::from(SPRITE_SIZE))
+        .id()
+    );
 }
 
 fn enemy_movement_system(

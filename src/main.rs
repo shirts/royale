@@ -23,6 +23,7 @@ use components::{
 };
 
 use enemy::Enemy;
+use player::Player;
 
 const FLOOR_POSITION: f32 = -350.0;
 const PLAYER_STARTING_LOCATION: Location = Location {
@@ -171,7 +172,8 @@ fn main() {
         .add_startup_system(setup_system)
         .add_system(movable_system)
         .add_system(projectile_velocity_system)
-        .add_system(player_projectile_enemy_system)
+        .add_system(player_projectile_enemy_collision_system)
+        .add_system(player_enemy_collision_system)
         .run();
 }
 
@@ -249,7 +251,35 @@ fn movable_system(
     }
 }
 
-fn player_projectile_enemy_system(
+fn player_enemy_collision_system(
+    mut commands: Commands,
+    mut player_query: Query<(Entity, &Transform, &SpriteSize, &player::Player)>,
+    enemy_query: Query<(&Transform, &SpriteSize), With<Enemy>>
+) {
+
+    if let Ok((player_entity, player_transform, player_size, player)) = player_query.get_single_mut() {
+        for (enemy_transform, enemy_size) in enemy_query.iter() {
+            let player_scale = Vec2::new(player_transform.scale[0], player_transform.scale[1]);
+
+            let enemy_scale = Vec2::new(enemy_transform.scale[0], enemy_transform.scale[1]);
+
+            let collision = collide(
+                enemy_transform.translation,
+                enemy_size.0 * enemy_scale,
+                player_transform.translation,
+                player_size.0 * player_scale
+            );
+
+            if let Some(collision) = collision {
+                commands.entity(player_entity).despawn();
+                println!("Game over!");
+                panic!("Game Over!")
+            }
+        }
+    }
+}
+
+fn player_projectile_enemy_collision_system(
     mut commands: Commands,
     projectile_query: Query<(Entity, &Transform, &SpriteSize), (With<Projectile>, With<FromPlayer>)>,
     enemy_query: Query<(Entity, &Transform, &SpriteSize), With<Enemy>>,
