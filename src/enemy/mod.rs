@@ -47,7 +47,7 @@ fn should_spawn_enemy(difficulty: Difficulty) -> bool {
 
     let choices = match difficulty {
         Difficulty::Novice => {
-            vec![true, false, false, false, false]
+            vec![true, false, false, false, false, false, false, false ,false, false]
         },
         Difficulty::Hard => {
             vec![true, false]
