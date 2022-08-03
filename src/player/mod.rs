@@ -154,6 +154,7 @@ fn player_shoot_system(
     keyboard_input: Res<Input<KeyCode>>,
     mut game: ResMut<Game>,
     mut query: Query<&mut Transform, With<Player>>,
+    asset_server: Res<AssetServer>
     ) {
 
     // Reduce delay each tick
@@ -171,6 +172,13 @@ fn player_shoot_system(
     // Set fire delay
     game.player.set_fire_delay(10);
 
+    let asset = match game.player.direction {
+        FacingDirection::Left => "projectile-left.png",
+        FacingDirection::Right => "projectile-right.png",
+        FacingDirection::Up => "projectile-up.png",
+        FacingDirection::Down => "projectile-down.png"
+    };
+
     if let Ok(transform) = query.get_single_mut() {
         let (x, y) = (transform.translation.x, transform.translation.y);
 
@@ -185,13 +193,10 @@ fn player_shoot_system(
                 .insert(Projectile::velocity())
                 .insert(Movable::new(true))
                 .insert_bundle(SpriteBundle {
+                    texture: asset_server.load(asset),
                     transform: Transform {
-                        translation: Vec3::new(missile_location.x, missile_location.y, missile_location.z),
                         scale: MISSILE_SIZE,
-                        ..default()
-                    },
-                    sprite: Sprite {
-                        color: MISSILE_COLOR,
+                        translation: Vec3::new(missile_location.x, missile_location.y, missile_location.z),
                         ..default()
                     },
                     ..default()
