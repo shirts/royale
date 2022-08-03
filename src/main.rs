@@ -259,7 +259,9 @@ fn player_enemy_collision_system(
 
     if let Ok((player_entity, player_transform, player_size, player)) = player_query.get_single_mut() {
         for (enemy_transform, enemy_size) in enemy_query.iter() {
-            let player_scale = Vec2::new(player_transform.scale[0], player_transform.scale[1]);
+            let player_scale = Vec2::new(
+                player_transform.scale[0] * 2.0, player_transform.scale[1] * 2.0
+            );
 
             let enemy_scale = Vec2::new(enemy_transform.scale[0], enemy_transform.scale[1]);
 
