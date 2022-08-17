@@ -47,7 +47,7 @@ const TOP_WALL: f32 = 400.0;
 const BOARD_WIDTH: f32 = 1200.0;
 const BOARD_HEIGHT: f32 = 800.0;
 
-const MISSILE_SIZE: Vec3 = const_vec3!([10.0, 15.0, 10.0]);
+const MISSILE_SIZE: Vec3 = const_vec3!([1.0, 1.0, 1.0]);
 const MISSILE_COLOR: Color = Color::rgb(0.9, 0.9, 0.9);
 
 #[derive(Copy, Clone)]
@@ -289,18 +289,14 @@ fn player_projectile_enemy_collision_system(
 
     // iterate through projectiles
     for (proj_entity, proj_transform, proj_size) in projectile_query.iter() {
-        let proj_scale = Vec2::new(proj_transform.scale[0], proj_transform.scale[1]);
-
         // iterate through enemies
         for (enemy_entity, enemy_transform, enemy_size) in enemy_query.iter() {
-            let enemy_scale = Vec2::new(enemy_transform.scale[0], enemy_transform.scale[1]);
-
             // determine collision
              let collision = collide(
                  proj_transform.translation,
-                 proj_size.0 * proj_scale,
+                 proj_size.0 * 5.0,
                  enemy_transform.translation,
-                 enemy_size.0 * enemy_scale
+                 enemy_size.0 * 5.0
              );
 
              if let Some(_) = collision {
@@ -308,7 +304,6 @@ fn player_projectile_enemy_collision_system(
                  commands.entity(enemy_entity).despawn();
                  commands.entity(proj_entity).despawn();
              };
-
 
         }
     }
